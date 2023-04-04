@@ -1,0 +1,29 @@
+---
+ - name: Set the index.html path 
+   set_fact: 
+      file_path: /var/www/html
+
+ - name: copy vars.html
+   copy:
+     src: vars.html
+     dest: "{{ file_path }}/vars.html"
+     owner: root
+     group: root
+     mode: 0755
+ - name: Add a link from index.hmtl to vars.html
+   lineinfile:
+      path: "{{ file_path }}/index.html"
+      line: <a href=vars.html>Ansible Variables page </a>
+      insertafter: EOF
+   ignore_errors: "{{ file_path }}/vars.html"
+ - name: Insert Hostname from ansible Facts  
+   lineinfile:
+     path: "{{ file_path }}/vars.html"
+     line: <p> my name is {{ ansible_hostname }}.</p>
+   ignore_errors: "{{ ansible_check_mode }}"
+ - name: Add a link from vars.html back to index.html
+   lineinfile:
+       path: "{{ file_path }}/vars.html"
+       line: <a href=index.html>Back to index.html</a>
+       insertafter: EOF
+   ignore_errors: "{{ ansible_check_mode}}" 

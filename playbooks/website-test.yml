@@ -1,0 +1,49 @@
+---
+ - name: Test the website 
+   hosts: server
+   become: yes
+   become_user: root
+
+   tasks:
+      - name: check port 80 is listening on managed node
+        wait_for: 
+           port: 80 
+           state: started
+           timeout: 3
+           
+      - name: Verify apache is available remotely 
+        uri:
+          url: http://{{ ansible_host }}/index.html
+        delegate_to: localhost        
+      
+      - name: stat apache2
+        stat:
+          path: /usr/sbin/apache2
+        register: i
+      - name: fail if apache2 dosen't exist 
+        assert:
+          that:
+            - "i.stat.exists"
+          fail_msg: "/usr/sbin/apache2 does not exist!"
+          success_msg: "/usr/sbin/apache2 exists" 
+      - name: verify apache2 is enabled
+        shell: systemctl list-unit-files | grep apache2.service | awk 
+         '{print $2}'
+        register: c 
+      - name: Fail if apache2 is not enabled 
+        assert: 
+           that:   
+             - "c.stdout == 'enabled' "
+           fail_msg: "apache2 service is not enabled!"
+           success_msg: "apache2 service is enabled"             
+      - name: Stat index.html
+        stat: 
+         path: /var/www/html/index.html
+        register: a
+      - name: confirm that index.html exists & owned by root
+        assert:
+          that: 
+            - "a.stat.exists"
+            - "a.stat.pw_name == 'root' "
+          fail_msg: "index.html may not exist or have correct ownership!"  
+          success_msg: "index.html exists with proper ownership"               

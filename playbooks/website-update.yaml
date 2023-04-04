@@ -1,0 +1,7 @@
+---
+- name: Update the website 
+  hosts: server
+  become: yes
+  become_user: root 
+  roles:
+     - website
